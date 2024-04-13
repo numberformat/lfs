@@ -8,13 +8,13 @@ case "$FETCH_TOOLCHAIN_MODE" in
   "0")
     echo "Downloading LFS packages.."
     echo "Getting wget-list.."
-    wget --timestamping http://www.linuxfromscratch.org/lfs/view/8.1/wget-list
+    wget --timestamping https://www.linuxfromscratch.org/museum/lfs-museum/8.1/wget-list
 
     echo "Getting packages.."
     wget --timestamping --continue --input-file=wget-list
 
     echo "Getting md5.."
-    wget --timestamping http://www.linuxfromscratch.org/lfs/downloads/8.1/md5sums
+    wget --timestamping https://www.linuxfromscratch.org/museum/lfs-museum/8.1/md5sums
 
     echo "Check hashes.."
     md5sum -c md5sums

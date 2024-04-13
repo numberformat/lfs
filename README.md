@@ -16,10 +16,17 @@ Scripts are organized in the way of following book structure whenever it makes s
 
 Use the following command:
 
-    docker rm lfs ;                                    \
-    docker build --tag lfs . &&                        \
-    sudo docker run -it --privileged --name lfs lfs && \
-    sudo docker cp lfs:/tmp/lfs.iso .
+```sh
+docker rm lfs
+docker build --tag lfs .
+sudo docker run -it --privileged --name lfs lfs # this performs the privileged build in the phase 2 container
+docker commit lfs lfs_phase2    # convert phase 2 container into image
+docker build --tag lfs_phase3 -f Dockerfile2 . # this dockerfile builds the lfs_phase3 image FROM the lfs_phase2
+docker run -it --privileged --name lfs_phase3 lfs_phase3 # this performs the privileged build in the phase 3 container
+docker cp lfs_phase3:/tmp/lfs.iso . # copy all the necessary files out of phase 3 container
+```
+
+If you get an error losetup: /tmp/ramdisk: failed to set up loop device, then just retry.
 
 Please note, that extended privileges are required by docker container in order to execute some commands (e.g. mount).
 
@@ -30,3 +37,15 @@ Final result is bootable iso image with LFS system which, for example, can be us
 ## License
 
 This work is based on instructions from [Linux from Scratch](http://www.linuxfromscratch.org/lfs) project and provided with MIT license.
+
+## Issues in 8.2 compare to 8.1
+
+Missing commands after comparing the contents of the ramdisks
+
+* openssl
+* c_rehash
+* wgetrc, wget
+* engine-1.1
+* libcrypto.pc
+* libssl.pc
+* make-ca.sh

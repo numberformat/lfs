@@ -1,9 +1,22 @@
-FROM debian:8
+FROM debian:10-slim
 
 # image info
 LABEL description="Automated LFS build"
-LABEL version="8.1"
+LABEL version="8.11"
 LABEL maintainer="ilya.builuk@gmail.com"
+
+# install required packages
+RUN apt-get update && apt-get install -y \
+    build-essential                      \
+    bison                                \
+    file                                 \
+    gawk                                 \
+    texinfo                              \
+    wget                                 \
+    sudo                                 \
+    genisoimage                          \
+ && apt-get -q -y autoremove             \
+ && rm -rf /var/lib/apt/lists/*
 
 # LFS mount point
 ENV LFS=/mnt/lfs
@@ -12,7 +25,7 @@ ENV LFS=/mnt/lfs
 ENV LC_ALL=POSIX
 ENV LFS_TGT=x86_64-lfs-linux-gnu
 ENV PATH=/tools/bin:/bin:/usr/bin:/sbin:/usr/sbin
-ENV MAKEFLAGS="-j 1"
+ENV MAKEFLAGS="-j 30"
 
 # Defines how toolchain is fetched
 # 0 use LFS wget file
@@ -27,37 +40,14 @@ ENV LFS_TEST=0
 ENV LFS_DOCS=0
 
 # degree of parallelism for compilation
-ENV JOB_COUNT=1
+ENV JOB_COUNT=30
 
 # loop device
 ENV LOOP=/dev/loop0
 
-# inital ram disk size in KB
-# must be in sync with CONFIG_BLK_DEV_RAM_SIZE
-ENV IMAGE_SIZE=800000
-
-# location of initrd tree
-ENV INITRD_TREE=/mnt/lfs
-
-# output image
-ENV IMAGE=isolinux/ramdisk.img
-
 # set bash as default shell
 WORKDIR /bin
 RUN rm sh && ln -s bash sh
-
-# install required packages
-RUN apt-get update && apt-get install -y \
-    build-essential                      \
-    bison                                \
-    file                                 \
-    gawk                                 \
-    texinfo                              \
-    wget                                 \
-    sudo                                 \
-    genisoimage                          \
- && apt-get -q -y autoremove             \
- && rm -rf /var/lib/apt/lists/*
 
 # create sources directory as writable and sticky
 RUN mkdir -pv     $LFS/sources \
@@ -107,5 +97,55 @@ USER lfs
 COPY [ "config/.bash_profile", "config/.bashrc", "/home/lfs/" ]
 RUN source ~/.bash_profile
 
+# download toolchain
+RUN /tools/3.1-download-tools.sh
+
+# build toolchain. Formally this code was in run-prepare.sh
+# We do it here to take advantage of layering
+RUN /tools/5.4-make-binutils.sh
+RUN /tools/5.5-make-gcc.sh
+RUN /tools/5.6-make-linux-api-headers.sh
+RUN /tools/5.7-make-glibc.sh
+RUN /tools/5.8-make-libstdc.sh
+RUN /tools/5.9-make-binutils.sh
+RUN /tools/5.10-make-gcc.sh
+RUN /tools/5.11-make-tcl.sh
+RUN /tools/5.12-make-expect.sh
+RUN /tools/5.13-make-dejagnu.sh
+RUN /tools/5.14-make-check.sh
+RUN /tools/5.15-make-ncurses.sh
+RUN /tools/5.16-make-bash.sh
+RUN /tools/5.17-make-bison.sh
+RUN /tools/5.18-make-bzip2.sh
+RUN /tools/5.19-make-coreutils.sh
+RUN /tools/5.20-make-diffutils.sh
+RUN /tools/5.21-make-file.sh
+RUN /tools/5.22-make-findutils.sh
+RUN /tools/5.23-make-gawk.sh
+RUN /tools/5.24-make-gettext.sh
+RUN /tools/5.25-make-grep.sh
+RUN /tools/5.26-make-gzip.sh
+RUN /tools/5.27-make-m4.sh
+RUN /tools/5.28-make-make.sh
+RUN /tools/5.29-make-patch.sh
+RUN /tools/5.30-make-perl.sh
+RUN /tools/5.31-make-sed.sh
+RUN /tools/5.32-make-tar.sh
+RUN /tools/5.33-make-texinfo.sh
+RUN /tools/5.34-make-util-linux.sh
+RUN /tools/5.35-make-xz.sh
+RUN /tools/5.36-strip.sh
+
+# Everything so far has been done in un-privileged mode. Now we need to switch to privileged mode
+# because the rest of the LFS build requires us to use the mount command.
+
+# execute rest as root
+USER root
+RUN chown -R root:root $LFS/tools && sync
+# formally this code was in run-build.sh
+
 # let's the party begin
-ENTRYPOINT [ "/tools/run-all.sh" ]
+ENTRYPOINT [ "/tools/run-build.sh" ]
+
+# start a crashed container
+# docker run -it --name debug_container image_name /bin/bash

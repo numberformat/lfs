@@ -1,8 +1,8 @@
-![LFS in VirtualBox](https://user-images.githubusercontent.com/1611077/33808510-16825dd2-dde8-11e7-9a1c-0ca0bc3ff2b5.png)
+![LFS in Virtual Machines](https://github.com/numberformat/lfs/releases/download/v8.2.1/Screenshot.2024-04-13.at.8.30.00.PM.png)
 
 ## Description
 
-This repository contains docker configuration to build bootable iso image with [Linux From Scratch 8.1](http://www.linuxfromscratch.org/lfs/downloads/8.1/LFS-BOOK-8.1.pdf).
+This repository contains docker configuration to build bootable ISO image with [Linux From Scratch 8.2](http://www.linuxfromscratch.org/lfs/downloads/8.2/LFS-BOOK-8.2.pdf).
 
 ## Why
 
@@ -14,38 +14,30 @@ Scripts are organized in the way of following book structure whenever it makes s
 
 ## Build
 
-Use the following command:
+Use the following commands:
 
 ```sh
-docker rm lfs
-docker build --tag lfs .
-sudo docker run -it --privileged --name lfs lfs # this performs the privileged build in the phase 2 container
-docker commit lfs lfs_phase2    # convert phase 2 container into image
-docker build --tag lfs_phase3 -f Dockerfile2 . # this dockerfile builds the lfs_phase3 image FROM the lfs_phase2
-docker run -it --privileged --name lfs_phase3 lfs_phase3 # this performs the privileged build in the phase 3 container
-docker cp lfs_phase3:/tmp/lfs.iso . # copy all the necessary files out of phase 3 container
+sudo ./phase1.sh
+sudo ./phase2.sh # If you get an error losetup: /tmp/ramdisk: failed to set up loop device, then just retry.
 ```
-
-If you get an error losetup: /tmp/ramdisk: failed to set up loop device, then just retry.
 
 Please note, that extended privileges are required by docker container in order to execute some commands (e.g. mount).
 
 ## Usage
 
-Final result is bootable iso image with LFS system which, for example, can be used to load the system inside virtual machine (tested with VirtualBox).
+Final result is bootable iso image with LFS system which, for example, can be used to load the system inside virtual machine (tested
+with VirtualBox and Proxmox VE).
+
+Below is a screenshot of the files contained within the ISO image. The image is bootable using Proxmox VE, VirtualBox or any other Virtual Environment.
+
+![LFS in Virtual Machines](https://github.com/numberformat/lfs/releases/download/v8.2.1/Screenshot.2024-04-13.at.8.41.03.PM.png)
+
+It uses RAMDisk thus does not require you to install it into any partition. The please note that your changes will be lost when the VM is restarted. To get around it you can just mount a SMB or NFS share and save your data there.
+
+## Troubleshooting
+
+If you have problems with master branch, please try to use stable version from the latest release with toolchain from archive.
 
 ## License
 
 This work is based on instructions from [Linux from Scratch](http://www.linuxfromscratch.org/lfs) project and provided with MIT license.
-
-## Issues in 8.2 compare to 8.1
-
-Missing commands after comparing the contents of the ramdisks
-
-* openssl
-* c_rehash
-* wgetrc, wget
-* engine-1.1
-* libcrypto.pc
-* libssl.pc
-* make-ca.sh

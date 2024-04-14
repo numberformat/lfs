@@ -2,8 +2,9 @@ FROM debian:10-slim
 
 # image info
 LABEL description="Automated LFS build"
-LABEL version="8.11"
+LABEL version="8.21"
 LABEL maintainer="ilya.builuk@gmail.com"
+
 
 # install required packages
 RUN apt-get update && apt-get install -y \
@@ -15,8 +16,12 @@ RUN apt-get update && apt-get install -y \
     wget                                 \
     sudo                                 \
     genisoimage                          \
+    libelf-dev                           \
+    bc                                   \
+    libssl-dev                           \
  && apt-get -q -y autoremove             \
  && rm -rf /var/lib/apt/lists/*
+
 
 # LFS mount point
 ENV LFS=/mnt/lfs
@@ -42,8 +47,15 @@ ENV LFS_DOCS=0
 # degree of parallelism for compilation
 ENV JOB_COUNT=30
 
-# loop device
-ENV LOOP=/dev/loop0
+# inital ram disk size in KB
+# must be in sync with CONFIG_BLK_DEV_RAM_SIZE
+ENV IMAGE_SIZE=900000
+
+# location of initrd tree
+ENV INITRD_TREE=/mnt/lfs
+
+# output image
+ENV IMAGE=isolinux/ramdisk.img
 
 # set bash as default shell
 WORKDIR /bin
@@ -68,7 +80,7 @@ COPY [ "scripts/run-all.sh",       \
        "scripts/prepare/",         \
        "scripts/build/",           \
        "scripts/image/",           \
-  "$LFS/tools/" ]
+       "$LFS/tools/" ]
 # copy configuration
 COPY [ "config/kernel.config", "$LFS/tools/" ]
 
@@ -112,7 +124,7 @@ RUN /tools/5.10-make-gcc.sh
 RUN /tools/5.11-make-tcl.sh
 RUN /tools/5.12-make-expect.sh
 RUN /tools/5.13-make-dejagnu.sh
-RUN /tools/5.14-make-check.sh
+RUN /tools/5.14-make-m4.sh
 RUN /tools/5.15-make-ncurses.sh
 RUN /tools/5.16-make-bash.sh
 RUN /tools/5.17-make-bison.sh
@@ -125,17 +137,15 @@ RUN /tools/5.23-make-gawk.sh
 RUN /tools/5.24-make-gettext.sh
 RUN /tools/5.25-make-grep.sh
 RUN /tools/5.26-make-gzip.sh
-RUN /tools/5.27-make-m4.sh
-RUN /tools/5.28-make-make.sh
-RUN /tools/5.29-make-patch.sh
-RUN /tools/5.30-make-perl.sh
-RUN /tools/5.31-make-sed.sh
-RUN /tools/5.32-make-tar.sh
-RUN /tools/5.33-make-texinfo.sh
-RUN /tools/5.34-make-util-linux.sh
-RUN /tools/5.35-make-xz.sh
-RUN /tools/5.36-strip.sh
-
+RUN /tools/5.27-make-make.sh
+RUN /tools/5.28-make-patch.sh
+RUN /tools/5.29-make-perl.sh
+RUN /tools/5.30-make-sed.sh
+RUN /tools/5.31-make-tar.sh
+RUN /tools/5.32-make-texinfo.sh
+RUN /tools/5.33-make-util-linux.sh
+RUN /tools/5.34-make-xz.sh
+RUN /tools/5.35-strip.sh
 # Everything so far has been done in un-privileged mode. Now we need to switch to privileged mode
 # because the rest of the LFS build requires us to use the mount command.
 
@@ -146,6 +156,3 @@ RUN chown -R root:root $LFS/tools && sync
 
 # let's the party begin
 ENTRYPOINT [ "/tools/run-build.sh" ]
-
-# start a crashed container
-# docker run -it --name debug_container image_name /bin/bash

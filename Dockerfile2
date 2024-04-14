@@ -5,7 +5,7 @@ ENV LFS=/mnt/lfs
 
 # inital ram disk size in KB
 # must be in sync with CONFIG_BLK_DEV_RAM_SIZE
-ENV IMAGE_SIZE=800000
+ENV IMAGE_SIZE=900000
 
 # location of initrd tree
 ENV INITRD_TREE=/mnt/lfs

@@ -6,11 +6,13 @@ This repository contains docker configuration to build bootable ISO image with [
 
 ## Why
 
-General idea is to learn Linux by building and running LFS system in isolation from the host system.
+General idea is to learn Linux by building and running LFS system in
+isolation from the host system.
 
 ## Structure
 
-Scripts are organized in the way of following book structure whenever it makes sense. Some deviations are done to make a bootable iso image.
+Scripts are organized in the way of following book structure whenever
+it makes sense. Some deviations are done to make a bootable iso image.
 
 ## Build
 
@@ -21,7 +23,8 @@ sudo ./phase1.sh
 sudo ./phase2.sh # If you get an error losetup: /tmp/ramdisk: failed to set up loop device, then just retry.
 ```
 
-Please note, that extended privileges are required by docker container in order to execute some commands (e.g. mount).
+Please note, that extended privileges are required by docker container
+in order to execute some commands (e.g. mount).
 
 ## Usage
 
@@ -40,4 +43,5 @@ If you have problems with master branch, please try to use stable version from t
 
 ## License
 
-This work is based on instructions from [Linux from Scratch](http://www.linuxfromscratch.org/lfs) project and provided with MIT license.
+This work is based on instructions from [Linux from Scratch](http://www.linuxfromscratch.org/lfs)
+project and provided with MIT license.

@@ -21,6 +21,7 @@ dd if=/dev/zero of=$RAMDISK bs=1k count=$IMAGE_SIZE
 losetup -d $LOOP > /dev/null 2>&1 || true
 
 sync
+
 # associate it with ${LOOP}
 echo losetup $LOOP $RAMDISK
 losetup $LOOP $RAMDISK
@@ -49,7 +50,10 @@ df $LOOP_DIR
 echo "Compressing system ramdisk image.."
 bzip2 -c $RAMDISK > $IMAGE
 
-# cleanup
+# Copy compressed image to /tmp dir (need for dockerhub)
+cp -v $IMAGE .
+
+# Cleanup
 umount $LOOP_DIR
 losetup -d $LOOP
 rm -rf $LOOP_DIR

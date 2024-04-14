@@ -37,6 +37,25 @@ Below is a screenshot of the files contained within the ISO image. The image is 
 
 It uses RAMDisk thus does not require you to install it into any partition. The please note that your changes will be lost when the VM is restarted. To get around it you can just mount a SMB or NFS share and save your data there.
 
+From here you can proceed to install the operating system onto your hard drive using raw command line tools. This is similar to the way you would setup Arch Linux but without the pre-written setup scripts. But honestly there is not much you can do with a bare bones LFS system more than getting networking setup and pinging a few sites.
+
+To get networking setup review the "General Network Configuration" of the LFS book. Its all documented there so I am not going to repeat all of that. It will guide you thru creating some config files and get you to the point where you can start to ping different servers on the internet. Be sure to select a network device which is compatible with the stock kernel. For example I had to choose Intel E1000 network card in my Proxmox VE hardware settings screen. Take note that any config setting you make will be lost on the next reboot.
+
+This is what I did to get the networking up.
+
+```sh
+ip link
+# get your network card name from above for example enp0s18 or eth0
+cd /etc/sysconfig/
+# copy or edit the stock config in case your card IS named eth0
+cp ifconfig.eth0 ifconfig.enp0s18
+# edit the above file and assign the static IP
+# DHCP is not supported in LFS that package gets introduced in Beyond LFS.
+# bring up the network
+ifup enp0s18
+# ping google.com or any other site
+```
+
 ## Troubleshooting
 
 If you have problems with master branch, please try to use stable version from the latest release with toolchain from archive.
